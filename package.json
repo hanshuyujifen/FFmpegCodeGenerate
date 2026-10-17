@@ -1,0 +1,17 @@
+{
+  "name": "ffmpeg-command-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "单机运行的网页版 FFmpeg 命令生成器：选择操作即可生成可执行的 ffmpeg 命令与批处理脚本",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {},
+  "keywords": ["ffmpeg", "video", "webui", "command-generator"],
+  "license": "MIT"
+}

@@ -1,0 +1,20 @@
+把 ffmpeg 可执行文件放在这个目录里，程序会自动识别。
+
+需要的两个文件：
+
+    ffmpeg.exe
+    ffprobe.exe
+
+获取方式（任选其一）：
+
+1. 官网下载：https://ffmpeg.org/download.html
+   Windows 推荐用 gyan.dev 的构建：
+   https://www.gyan.dev/ffmpeg/builds/  （下载 ffmpeg-release-essentials.zip）
+   解压后进入 bin 目录，把 ffmpeg.exe 和 ffprobe.exe 复制到这里。
+
+2. 或者把 ffmpeg 所在目录加入系统 PATH，就不需要放这里了。
+
+3. 或者设置环境变量 FFMPEG_PATH 指向 ffmpeg.exe 的完整路径。
+
+不装 ffmpeg 也能正常使用本工具生成和复制命令，
+只是网页里的「执行」按钮会不可用。

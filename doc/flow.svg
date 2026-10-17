@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 220" width="880" height="220" font-family="-apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0e14"/>
+      <stop offset="1" stop-color="#131b2c"/>
+    </linearGradient>
+    <marker id="arw" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#4f8cff"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="220" rx="14" fill="url(#bg)" stroke="#232c42"/>
+
+  <text x="28" y="40" fill="#e6ebf5" font-size="17" font-weight="600">🎬 FFmpeg 命令生成器</text>
+  <text x="28" y="62" fill="#6b7793" font-size="12.5">选好操作 → 直接得到可执行的命令</text>
+
+  <!-- step 1 -->
+  <rect x="28" y="88" width="196" height="96" rx="10" fill="#161d2e" stroke="#2e3a55"/>
+  <rect x="28" y="88" width="196" height="3" rx="1.5" fill="#3b82f6"/>
+  <text x="46" y="118" fill="#9fc7ff" font-size="13" font-weight="700">① 输入与输出</text>
+  <text x="46" y="140" fill="#a8b3c9" font-size="11.5">指定视频文件夹 / 单个文件</text>
+  <text x="46" y="158" fill="#a8b3c9" font-size="11.5">指定输出文件夹</text>
+  <text x="46" y="176" fill="#6b7793" font-size="11">自动扫描 · 逐个勾选</text>
+
+  <!-- step 2 -->
+  <rect x="256" y="88" width="196" height="96" rx="10" fill="#161d2e" stroke="#2e3a55"/>
+  <rect x="256" y="88" width="196" height="3" rx="1.5" fill="#8b5cf6"/>
+  <text x="274" y="118" fill="#c4b5fd" font-size="13" font-weight="700">② 选择操作</text>
+  <text x="274" y="140" fill="#a8b3c9" font-size="11.5">13 大类 · 100+ 个操作配方</text>
+  <text x="274" y="158" fill="#a8b3c9" font-size="11.5">点卡片加入流水线</text>
+  <text x="274" y="176" fill="#6b7793" font-size="11">可叠加多步 · 可拖拽排序</text>
+
+  <!-- step 3 -->
+  <rect x="484" y="88" width="368" height="96" rx="10" fill="#161d2e" stroke="#2e3a55"/>
+  <rect x="484" y="88" width="368" height="3" rx="1.5" fill="#34d399"/>
+  <text x="502" y="118" fill="#6ee7b7" font-size="13" font-weight="700">③ 生成结果</text>
+  <text x="502" y="140" fill="#b9e0ff" font-size="11.5" font-family="Consolas, monospace">ffmpeg -y -ss 00:00:10 -i in.mp4 -t 00:00:30 ...</text>
+  <text x="502" y="158" fill="#a8b3c9" font-size="11.5">命令预览 · 批处理脚本(.bat/.sh) · 一键执行</text>
+  <text x="502" y="176" fill="#6b7793" font-size="11">全部在本机完成，不上传任何文件</text>
+
+  <!-- arrows -->
+  <line x1="228" y1="136" x2="250" y2="136" stroke="#4f8cff" stroke-width="2" marker-end="url(#arw)"/>
+  <line x1="456" y1="136" x2="478" y2="136" stroke="#4f8cff" stroke-width="2" marker-end="url(#arw)"/>
+</svg>

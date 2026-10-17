@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FFmpeg 命令生成器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ============================ 顶栏 ============================ -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-logo">🎬</span>
+    <div class="brand-text">
+      <h1>FFmpeg 命令生成器</h1>
+      <p>速度优先 · 能 copy 就不重编码</p>
+    </div>
+  </div>
+
+  <div class="topbar-mid">
+    <div class="searchbox">
+      <span class="searchbox-icon">🔍</span>
+      <input id="opSearch" type="search" placeholder="搜索操作，如：压缩 / 拼接 / 水印 / gif" autocomplete="off">
+      <kbd>/</kbd>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div id="ffStatus" class="badge badge-warn" title="正在检测 FFmpeg…">
+      <span class="dot"></span><span class="badge-text">检测中…</span>
+    </div>
+    <button id="btnHelp" class="btn btn-ghost" title="使用说明">❓</button>
+    <button id="btnTogglePanel" class="btn btn-ghost panel-toggle" title="显示/隐藏右侧输出面板">⇥</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ============================ 左侧分类 ============================ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-scroll">
+      <div class="nav-group-label">操作分类</div>
+      <ul id="catList" class="cat-list"></ul>
+    </div>
+    <div class="sidebar-foot">
+      <div class="envbox" id="envBox">
+        <div class="envrow"><span>Node</span><b id="envNode">—</b></div>
+        <div class="envrow"><span>系统</span><b id="envOs">—</b></div>
+        <div class="envrow"><span>FFmpeg</span><b id="envFf" class="ellipsis">—</b></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================ 主区域 ============================ -->
+  <main class="main" id="main">
+
+    <!-- ---------- 默认策略提示 ---------- -->
+    <section class="card section" style="border-left:4px solid #16a34a;">
+      <div class="section-body" style="padding:12px 16px;">
+        <strong>⚡ 默认原则：优先 -c copy，避免重新编码</strong>
+        <div class="hint" style="margin-top:6px;">剪切、合并、删音轨等操作优先使用流复制，速度快且不损失画质。只有滤镜、加水印、改变分辨率或要求帧级精确剪切等操作才需要重编码；遇到这种情况，工具应明确提示。流复制的剪切点可能受关键帧限制。</div>
+      </div>
+    </section>
+
+    <!-- ---------- 步骤 1：输入输出 ---------- -->
+    <section class="card section">
+      <div class="section-head">
+        <h2><span class="step-num">1</span> 输入与输出</h2>
+        <button class="btn btn-mini" data-collapse="ioBody">收起</button>
+      </div>
+
+      <div class="section-body" id="ioBody">
+        <div class="grid12">
+
+          <div class="col-12">
+            <label class="field-label">输入方式</label>
+            <div class="segmented" id="inputMode">
+              <button class="seg active" data-mode="folder">📁 整个文件夹</button>
+              <button class="seg" data-mode="single">🎞️ 单个文件</button>
+              <button class="seg" data-mode="files">📑 多个文件</button>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="field-label" for="inputPath">
+              输入位置
+              <span class="hint" id="inputPathHint">把要处理的视频放在哪个文件夹</span>
+            </label>
+            <div class="pathrow">
+              <input id="inputPath" class="input" type="text" spellcheck="false"
+                     placeholder="例如 C:\Users\你\Videos  或直接粘贴视频文件路径">
+              <button class="btn btn-icon" id="btnPickInput" title="用系统对话框选择">📂</button>
+              <button class="btn btn-icon" id="btnBrowseInput" title="在网页里浏览">🗂️</button>
+              <button class="btn btn-icon" id="btnPasteInput" title="从剪贴板粘贴路径">📋</button>
+            </div>
+          </div>
+
+          <div class="col-12" id="fileListWrap" hidden>
+            <div class="filelist-head">
+              <label class="checkline">
+                <input type="checkbox" id="chkAll" checked>
+                <span>全选</span>
+              </label>
+              <span class="muted" id="fileCount">0 个文件</span>
+              <span class="spacer"></span>
+              <label class="checkline"><input type="checkbox" id="chkRecursive"><span>包含子文件夹</span></label>
+              <select id="selFilter" class="select select-sm">
+                <option value="video">仅视频</option>
+                <option value="video,audio">视频 + 音频</option>
+                <option value="video,image">视频 + 图片</option>
+                <option value="video,audio,image">视频 + 音频 + 图片</option>
+              </select>
+              <button class="btn btn-mini" id="btnRescan">重新扫描</button>
+            </div>
+            <div class="filelist" id="fileList"></div>
+          </div>
+
+          <div class="col-6">
+            <label class="field-label" for="outputDir">
+              输出文件夹
+              <span class="hint">处理结果保存到哪里</span>
+            </label>
+            <div class="pathrow">
+              <input id="outputDir" class="input" type="text" spellcheck="false" placeholder="例如 C:\Users\你\Videos\输出">
+              <button class="btn btn-icon" id="btnPickOutput" title="用系统对话框选择">📂</button>
+              <button class="btn btn-icon" id="btnBrowseOutput" title="在网页里浏览">🗂️</button>
+            </div>
+          </div>
+
+          <div class="col-3">
+            <label class="field-label" for="suffix">文件名后缀</label>
+            <input id="suffix" class="input" type="text" value="_out" spellcheck="false">
+          </div>
+
+          <div class="col-3">
+            <label class="field-label">输出选项</label>
+            <div class="inline-checks">
+              <label class="checkline"><input type="checkbox" id="optOverwrite" checked><span>覆盖同名文件</span></label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="field-label">
+              画质档位
+              <span class="hint">统一覆盖各操作里写死的 CRF / 预设；不想重编码的操作（如无损切割）不受影响</span>
+            </label>
+            <div class="field-row">
+              <select id="selQuality" class="select" style="max-width:330px">
+                <option value="source" selected>跟随源素材 —— 编码器与位深贴着原片（推荐）</option>
+                <option value="nearlossless">近无损 —— CRF 16，文件大、最接近原画</option>
+                <option value="high">高画质 —— CRF 18</option>
+                <option value="standard">标准 —— CRF 23</option>
+                <option value="small">小体积 —— CRF 28</option>
+                <option value="off">不覆盖 —— 用各操作自己的参数</option>
+              </select>
+              <span class="badge" id="qualityBadge"><span class="dot"></span><span class="badge-text">—</span></span>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="field-label">
+              输入音轨
+              <span class="hint">剪辑、变速、拼接等操作需要知道素材有没有声音；没有音轨却按有音轨生成，ffmpeg 会报 “matches no streams”</span>
+            </label>
+            <div class="field-row">
+              <select id="selHasAudio" class="select" style="max-width:190px">
+                <option value="auto">自动检测（推荐）</option>
+                <option value="yes">强制按「有音轨」处理</option>
+                <option value="no">强制按「无音轨」处理</option>
+              </select>
+              <span class="badge" id="audioBadge"><span class="dot"></span><span class="badge-text">未检测</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="io-actions">
+          <button class="btn btn-primary" id="btnCheckPaths">检查路径</button>
+          <button class="btn" id="btnProbe">🔍 查看首个文件的信息</button>
+          <span class="muted" id="pathStatus">尚未检查</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 步骤 2：选择操作 ---------- -->
+    <section class="card section">
+      <div class="section-head">
+        <h2><span class="step-num">2</span> 选择要做的处理 <span class="muted" id="opCountLabel"></span></h2>
+        <button class="btn btn-mini" data-collapse="opBody">收起</button>
+      </div>
+      <div class="section-body" id="opBody">
+        <div class="cat-cards" id="catCards"></div>
+        <div class="oplist" id="opList"></div>
+        <div class="empty" id="opEmpty">
+          <p>从左侧选一个分类，或直接在上方搜索框输入关键词。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 步骤 3：流水线 ---------- -->
+    <section class="card section">
+      <div class="section-head">
+        <h2>
+          <span class="step-num">3</span> 处理流水线
+          <span class="muted" id="pipeCount"></span>
+        </h2>
+        <div class="section-head-actions">
+          <button class="btn btn-mini" id="btnClearPipe">清空</button>
+        </div>
+      </div>
+      <div class="section-body" id="pipeBody">
+        <div class="empty" id="pipeEmpty">
+          <p>还没有选择任何操作。点击上面的操作卡片即可加入流水线。</p>
+          <p class="muted">可以叠加多个操作，它们会按顺序依次执行。</p>
+        </div>
+        <ol class="pipeline" id="pipeline"></ol>
+      </div>
+    </section>
+
+    <footer class="foot-note">
+      <span>FFmpeg 命令生成器 v1.0 · 本地单机运行 · 所有计算都在你的电脑上完成</span>
+    </footer>
+  </main>
+
+  <!-- ============================ 右侧输出 ============================ -->
+  <aside class="panel" id="panel">
+    <div class="panel-head">
+      <div class="tabs" id="panelTabs">
+        <button class="tab active" data-tab="preview">命令预览</button>
+        <button class="tab" data-tab="script">批处理脚本</button>
+        <button class="tab" data-tab="aux">附属文件</button>
+        <button class="tab" data-tab="log">执行日志</button>
+      </div>
+      <button class="btn btn-ghost btn-mini panel-close" id="btnClosePanel">✕</button>
+    </div>
+
+    <div class="panel-banner" id="panelBanner" hidden></div>
+
+    <!-- 命令预览 -->
+    <div class="panel-body tab-pane active" data-pane="preview">
+      <div class="panel-toolbar">
+        <button class="btn btn-primary btn-sm" id="btnRunAll">▶ 全部执行</button>
+        <button class="btn btn-sm" id="btnCopyAll">复制全部命令</button>
+        <span class="spacer"></span>
+        <span class="muted" id="jobSummary"></span>
+      </div>
+      <div id="jobList" class="joblist">
+        <div class="empty"><p>选好输入输出并添加操作后，这里会显示出可执行的 ffmpeg 命令。</p></div>
+      </div>
+    </div>
+
+    <!-- 批处理脚本 -->
+    <div class="panel-body tab-pane" data-pane="script">
+      <div class="panel-toolbar">
+        <div class="segmented segmented-sm" id="scriptLang">
+          <button class="seg active" data-lang="bat">Windows .bat</button>
+          <button class="seg" data-lang="sh">macOS/Linux .sh</button>
+          <button class="seg" data-lang="txt">纯文本清单</button>
+        </div>
+      </div>
+      <div class="panel-toolbar">
+        <button class="btn btn-sm btn-primary" id="btnSaveScript">💾 保存到输出文件夹</button>
+        <button class="btn btn-sm" id="btnDownloadScript">⬇ 下载</button>
+        <button class="btn btn-sm" id="btnCopyScript">复制</button>
+      </div>
+      <pre class="code" id="scriptBox">（还没有可生成的脚本）</pre>
+    </div>
+
+    <!-- 附属文件 -->
+    <div class="panel-body tab-pane" data-pane="aux">
+      <div class="panel-toolbar">
+        <button class="btn btn-sm btn-primary" id="btnSaveAux">💾 全部保存到输出文件夹</button>
+        <span class="muted">用于 concat 列表、章节文件等</span>
+      </div>
+      <div id="auxList" class="auxlist"></div>
+    </div>
+
+    <!-- 执行日志 -->
+    <div class="panel-body tab-pane" data-pane="log">
+      <div class="panel-toolbar">
+        <span class="runstatus" id="runStatus">空闲</span>
+        <span class="spacer"></span>
+        <button class="btn btn-sm" id="btnStopRun" disabled>■ 停止</button>
+        <button class="btn btn-sm" id="btnClearLog">清空</button>
+      </div>
+      <pre class="terminal" id="logBox"></pre>
+    </div>
+  </aside>
+</div>
+
+<!-- ============================ 浏览目录弹窗 ============================ -->
+<div class="modal" id="fsModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="fsTitle">选择文件夹</h3>
+      <button class="btn btn-ghost" id="fsClose">✕</button>
+    </div>
+    <div class="modal-tools">
+      <button class="btn btn-sm" id="fsUp">⬆ 上一级</button>
+      <input class="input" id="fsPath" spellcheck="false" placeholder="直接输入路径后回车">
+      <button class="btn btn-sm" id="fsGo">前往</button>
+    </div>
+    <div class="modal-quick" id="fsQuick"></div>
+    <div class="modal-list" id="fsList"></div>
+    <div class="modal-foot">
+      <span class="muted" id="fsSelected">未选择</span>
+      <span class="spacer"></span>
+      <button class="btn" id="fsCancel">取消</button>
+      <button class="btn btn-primary" id="fsConfirm">选择当前文件夹</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ 帮助弹窗 ============================ -->
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card modal-card-wide">
+    <div class="modal-head">
+      <h3>使用说明</h3>
+      <button class="btn btn-ghost" id="helpClose">✕</button>
+    </div>
+    <div class="modal-body help-body">
+      <h4>三步搞定</h4>
+      <ol>
+        <li><b>输入与输出</b>：指定视频所在的文件夹（或单个/多个视频文件），再指定输出文件夹。选文件夹后会自动扫描出里面的视频，可以逐个勾选。</li>
+        <li><b>选择操作</b>：在左侧分类里挑，或直接搜索。点卡片就加入流水线。同一个操作可以加多次（比如分两段剪）。</li>
+        <li><b>生成命令</b>：右侧实时显示命令。「批处理脚本」标签页可以把整套操作保存成 <code>.bat</code> 双击运行，也可以点「全部执行」直接在本机跑。</li>
+      </ol>
+
+      <h4>流水线是怎么工作的</h4>
+      <p>多个操作会<b>按顺序</b>执行：第 1 步的输出自动成为第 2 步的输入，中间文件命名成 <code>原名_step1.mp4</code>、<code>原名_step2.mp4</code>，最后一步的结果就是你的成品。只有一步时会用你在「文件名后缀」里填的值。</p>
+      <p>像「无损拼接」「重编码拼接」这种需要吃下<b>全部文件</b>的操作，请把它放在流水线第一位。</p>
+
+      <h4>常见问题</h4>
+      <dl>
+        <dt>提示找不到 ffmpeg？</dt>
+        <dd>把 <code>ffmpeg.exe</code> 所在目录加入系统 PATH，或把 <code>ffmpeg.exe</code>、<code>ffprobe.exe</code> 直接放到本项目根目录下的 <code>bin</code> 文件夹里。也可以设置环境变量 <code>FFMPEG_PATH</code>。生成命令不受影响，只是没法在网页里直接执行。</dd>
+        <dt>命令能在别处用吗？</dt>
+        <dd>可以。命令预览里的文本可以直接粘到 CMD / PowerShell / 终端里执行；保存出来的 <code>.bat</code> 或 <code>.sh</code> 也能拿到任何装了 ffmpeg 的机器上跑。</dd>
+        <dt>无损切割为什么时间对不上？</dt>
+        <dd>不重新编码时，ffmpeg 只能从关键帧开始切。要精确到帧，请用「精确剪辑（重编码）」或勾选「强制精确切割」。</dd>
+        <dt>想加一个这里没有的参数？</dt>
+        <dd>用「高级与自定义」分类里的<b>自定义参数</b>操作，或者在大多数操作的展开表单里填写<b>附加参数</b>。</dd>
+      </dl>
+      <p class="muted">快捷键：<kbd>/</kbd> 聚焦搜索框 · <kbd>Esc</kbd> 关闭弹窗</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/engine.js"></script>
+<script src="js/recipes-edit.js"></script>
+<script src="js/recipes-format.js"></script>
+<script src="js/recipes-visual.js"></script>
+<script src="js/recipes-audio.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
